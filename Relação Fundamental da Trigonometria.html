@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Relação Fundamental da Trigonometria</title>
+<style>
+:root{color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);background:#0A0A0A}
+html,body{height:100%;margin:0;background:#0A0A0A;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+body{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+canvas{width:100%;max-width:560px;max-height:calc(100% - 70px);aspect-ratio:600/860;display:block}
+.bar{display:flex;align-items:center;gap:12px;width:min(92%,520px)}
+button{background:none;border:1px solid #333;color:#fff;border-radius:20px;padding:7px 16px;font-size:14px}
+#pg{flex:1;height:6px;background:#222;border-radius:3px;cursor:pointer;position:relative}
+#pf{height:100%;width:0;background:#5AB4FF;border-radius:3px}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="bar"><button id="pp">Pausar</button><div id="pg"><div id="pf"></div></div></div>
+<script>
+const W=600,H=860,cx=300,cy=300,R=190,TH=0.9,TOTAL=62;
+const BL="#5AB4FF",GR="#4ADE80",RD="#FF5C6C",WH="#fff",DIM="#3a3a3a";
+const cv=document.getElementById("c"),ctx=cv.getContext("2d");
+function fit(){const d=window.devicePixelRatio||1;cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0)}
+fit();
+const cl=x=>Math.max(0,Math.min(1,x)),pr=(t,a,b)=>cl((t-a)/(b-a)),ez=x=>x<.5?2*x*x:1-Math.pow(-2*x+2,2)/2;
+function line(x1,y1,x2,y2,col,w,dash){ctx.beginPath();ctx.setLineDash(dash||[]);ctx.strokeStyle=col;ctx.lineWidth=w||2;ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.setLineDash([])}
+function txt(s,x,y,col,size,al,a){ctx.save();ctx.globalAlpha=a==null?1:a;ctx.fillStyle=col;ctx.font=(size||18)+"px system-ui,sans-serif";ctx.textAlign=al||"center";ctx.fillText(s,x,y);ctx.restore()}
+function parts(arr,y,size,a0,t){ // texto colorido centralizado, aparece peça a peça
+  ctx.font=size+"px system-ui,sans-serif";let w=0;const ws=arr.map(p=>{const m=ctx.measureText(p[0]).width;w+=m;return m});
+  let x=cx-w/2;arr.forEach((p,i)=>{txt(p[0],x,y,p[1],size,"left",pr(t,a0+i*.7,a0+i*.7+.8));x+=ws[i]})}
+const caps=[[0.5,6,"Um círculo de raio R = 1"],[6,14,"Um raio gira formando o ângulo θ"],[14,22,"A projeção horizontal é o cosseno"],[22,30,"A projeção vertical é o seno"],[30,38,"Forma-se um triângulo retângulo"],[38,50,"Aplicando Pitágoras: a² + b² = c²"],[50,62,"Vale para qualquer ângulo θ"]];
+function draw(t){
+  ctx.clearRect(0,0,W,H);
+  const ax=pr(t,0,2);
+  line(cx-(cx-35)*ez(ax),cy,cx+(cx-35)*ez(ax),cy,"#777",1.5);
+  line(cx,cy+(cy-60)*ez(ax),cx,cy-(cy-60)*ez(ax),"#777",1.5);
+  txt("x",565,cy-8,"#777",16,"center",ax);txt("y",cx+14,52,"#777",16,"center",ax);
+  const cp=ez(pr(t,1.5,4.5));
+  ctx.beginPath();ctx.strokeStyle=WH;ctx.lineWidth=2;ctx.arc(cx,cy,R,0,-cp*Math.PI*2,true);ctx.stroke();
+  const a1=pr(t,4.5,5.5);
+  txt("1",cx+R+10,cy+22,WH,16,"center",a1);
+  if(t<6.5&&t>3.5){line(cx,cy,cx+R,cy,BL,3.5)}
+  txt("R = 1",cx+R/2,cy+30,BL,20,"center",pr(t,4,5)*(1-pr(t,6.5,7.5)*0.0));
+  // ângulo
+  let ang=t<6?0:(t<13?TH*ez(pr(t,6,13)):TH);
+  if(t>50)ang=TH+0.4*Math.sin((t-50)*1.1);
+  const c=Math.cos(ang),s=Math.sin(ang),px=cx+R*c,py=cy-R*s;
+  const hot=(a,b)=>t>=a&&t<b?1:0;
+  // triângulo
+  const tf=ez(pr(t,30,33));
+  if(tf>0){ctx.save();ctx.globalAlpha=0.16*tf;ctx.fillStyle=BL;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(px,cy);ctx.lineTo(px,py);ctx.closePath();ctx.fill();ctx.restore()}
+  if(t>=6){
+    line(cx,cy,px,py,BL,3.5);
+    ctx.beginPath();ctx.fillStyle=WH;ctx.arc(px,py,5.5,0,7);ctx.fill();
+    if(ang>0.02){ctx.beginPath();ctx.strokeStyle=WH;ctx.lineWidth=1.5;ctx.arc(cx,cy,38,0,-ang,true);ctx.stroke();
+      txt("θ",cx+58*Math.cos(ang/2),cy-58*Math.sin(ang/2)+6,WH,20)}
+  }
+  // cosseno
+  const k=ez(pr(t,14,17));
+  if(k>0){line(px,py,px,py+(cy-py)*k,WH,1.5,[5,6]);
+    const kk=pr(t,16,19);line(cx,cy,cx+(px-cx)*kk,cy,GR,4.5);
+    const pul=1+0.25*hot(14,22)*Math.sin(t*6);
+    txt("cos θ",(cx+px)/2,cy+30*pul,GR,20,"center",kk)}
+  // seno
+  const m=ez(pr(t,22,25));
+  if(m>0){line(px,py,px+(cx-px)*m,py,WH,1.5,[5,6]);
+    const mm=pr(t,24,27);line(cx,cy,cx,cy+(py-cy)*mm,RD,4.5);
+    txt("sen θ",cx-14,(cy+py)/2+6,RD,20,"right",mm)}
+  // rótulos do triângulo
+  if(t>=33){const a=pr(t,33,35);
+    txt("hipotenusa = 1",(cx+px)/2-26*s-6,(cy+py)/2-26*c-4,BL,17,"right",a);
+    txt("adjacente",(cx+px)/2,cy+52,GR,15,"center",a);
+    txt("oposto",px+12,(cy+py)/2+5,RD,15,"left",a);
+    ctx.save();ctx.globalAlpha=a;ctx.strokeStyle=WH;ctx.lineWidth=1.2;ctx.strokeRect(px-12,cy-12,12,12);ctx.restore()}
+  // valores ao vivo
+  if(t>=50){const a=pr(t,50,52);
+    txt("cos²θ = "+(c*c).toFixed(2)+"   sen²θ = "+(s*s).toFixed(2),cx,540,"#aaa",16,"center",a)}
+  // legenda
+  let cap="";let ca=1;for(const q of caps){if(t>=q[0]&&t<q[1]){cap=q[2];ca=Math.min(pr(t,q[0],q[0]+.6),1-pr(t,q[1]-.5,q[1]))}}
+  txt(cap,cx,625,WH,22,"center",ca);
+  // Pitágoras
+  if(t>=38){
+    parts([["(cateto adjacente)²",GR],[" + ",WH],["(cateto oposto)²",RD],[" = ",WH],["(hipotenusa)²",BL]],700,19,38.3,t);
+    if(t>=44){const f=pr(t,44,45);ctx.save();ctx.globalAlpha=f;
+      parts([["cos²θ",GR],[" + ",WH],["sen²θ",RD],[" = ",WH],["1",BL]],775,40,44.3,t);ctx.restore();
+      const w=pr(t,47,48.5);txt("(1² = 1)",cx,815,"#888",16,"center",w)}
+  }
+  document.getElementById("pf").style.width=(t/TOTAL*100)+"%";
+}
+let t=0,play=true,last=performance.now();
+function loop(n){const dt=(n-last)/1000;last=n;if(play){t+=dt;if(t>TOTAL)t=0}draw(t);requestAnimationFrame(loop)}
+requestAnimationFrame(loop);
+const pp=document.getElementById("pp");
+pp.onclick=()=>{play=!play;pp.textContent=play?"Pausar":"Continuar"};
+document.getElementById("pg").onclick=e=>{const r=e.currentTarget.getBoundingClientRect();t=(e.clientX-r.left)/r.width*TOTAL};
+</script>
+</body>
+</html>
